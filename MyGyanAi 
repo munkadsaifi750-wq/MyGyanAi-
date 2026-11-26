@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGyanAI - AI Study & Exam Assistant</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body id="appBody" class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col transition-colors duration-300">
+
+    <!-- Top Navigation / Header -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+        <div class="flex items-center space-x-3">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2.5 rounded-xl shadow-lg shadow-indigo-500/30">
+                <i class="fa-solid fa-graduation-cap text-white text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">MyGyanAI</h1>
+                <p class="text-xs text-slate-400">भारतीय छात्रों के लिए AI स्टडी असिस्टेंट</p>
+            </div>
+        </div>
+
+        <!-- Board, Class, Theme Customizer & Gamification Selectors -->
+        <div class="flex items-center gap-2 flex-wrap">
+            <!-- Theme Picker -->
+            <select id="themeSelect" onchange="changeTheme(this.value)" class="bg-slate-800 border border-slate-700 text-xs rounded-lg px-2.5 py-2 text-slate-200 focus:outline-none focus:border-blue-500">
+                <option value="slate">🌙 Dark Slate</option>
+                <option value="ocean">🌊 Ocean Blue</option>
+                <option value="purple">💜 Royal Purple</option>
+            </select>
+
+            <select id="boardSelect" class="bg-slate-800 border border-slate-700 text-xs rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500">
+                <option value="CBSE">CBSE Board</option>
+                <option value="ICSE">ICSE Board</option>
+                <option value="UP">UP Board</option>
+                <option value="State">Other State Board</option>
+            </select>
+
+            <select id="classSelect" class="bg-slate-800 border border-slate-700 text-xs rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500">
+                <option value="Class 10">Class 10</option>
+                <option value="Class 6">Class 6</option>
+                <option value="Class 7">Class 7</option>
+                <option value="Class 8">Class 8</option>
+                <option value="Class 9">Class 9</option>
+                <option value="Class 11">Class 11</option>
+                <option value="Class 12">Class 12</option>
+            </select>
+
+            <!-- Gamified Stars & Master Plan Badge -->
+            <div class="flex items-center gap-2 bg-slate-800/80 border border-amber-500/40 px-3 py-1.5 rounded-xl">
+                <i class="fa-solid fa-star text-amber-400"></i>
+                <span id="starCount" class="text-sm font-bold text-amber-300">120</span>
+                <span id="masterPlanBadge" class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-semibold border border-amber-500/30">Master Plan Unlocked</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Toast Notification Banner -->
+    <div id="toastBanner" class="hidden fixed bottom-20 right-4 z-50 bg-indigo-600 text-white text-xs sm:text-sm px-4 py-3 rounded-xl shadow-2xl border border-indigo-400/30 fade-in"></div>
+
+    <!-- Main Content Layout -->
+    <div class="flex-1 flex flex-col md:flex-row max-w-7xl w-full mx-auto">
+        
+        <!-- Sidebar Navigation (Subjects & Tools) -->
+        <aside class="w-full md:w-72 bg-slate-900/60 border-r border-slate-800 p-4 flex flex-col gap-4">
+            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">सभी विषय (All Subjects)</h2>
+            <div class="space-y-1.5" id="subjectButtons">
+                <button onclick="selectSubject('SCIENCE')" data-subj="SCIENCE" class="subj-btn w-full text-left px-3 py-2.5 rounded-xl bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 text-sm font-semibold transition flex items-center gap-3">
+                    <i class="fa-solid fa-flask text-emerald-400 w-5"></i> विज्ञान (Science)
+                </button>
+                <button onclick="selectSubject('MATH')" data-subj="MATH" class="subj-btn w-full text-left px-3 py-2.5 rounded-xl bg-slate-800/50 hover:bg-slate-800 text-slate-300 border border-slate-700/50 text-sm font-medium transition flex items-center gap-3">
+                    <i class="fa-solid fa-square-root-variable text-blue-400 w-5"></i> गणित (Mathematics)
+                </button>
+                <button onclick="selectSubject('SST')" data-subj="SST" class="subj-btn w-full text-left px-3 py-2.5 rounded-xl bg-slate-800/50 hover:bg-slate-800 text-slate-300 border border-slate-700/50 text-sm font-medium transition flex items-center gap-3">
+                    <i class="fa-solid fa-globe text-orange-400 w-5"></i> सामाजिक विज्ञान (SST)
+                </button>
+                <button onclick="selectSubject('HINDI')" data-subj="HINDI" class="subj-btn w-full text-left px-3 py-2.5 rounded-xl bg-slate-800/50 hover:bg-slate-800 text-slate-300 border border-slate-700/50 text-sm font-medium transition flex items-center gap-3">
+                    <i class="fa-solid fa-om text-rose-400 w-5"></i> हिंदी (साहित्य & व्याकरण)
+                </button>
+                <button onclick="selectSubject('CODING')" data-subj="CODING" class="subj-btn w-full text-left px-3 py-2.5 rounded-xl bg-slate-800/50 hover:bg-slate-800 text-slate-300 border border-slate-700/50 text-sm font-medium transition flex items-center gap-3">
+                    <i class="fa-solid fa-code text-purple-400 w-5"></i> कंप्यूटर और कोडिंग
+                </button>
+                <button onclick="selectSubject('ENGLISH')" data-subj="ENGLISH" class="subj-btn w-full text-left px-3 py-2.5 rounded-xl bg-slate-800/50 hover:bg-slate-800 text-slate-300 border border-slate-700/50 text-sm font-medium transition flex items-center gap-3">
+                    <i class="fa-solid fa-book-open text-amber-400 w-5"></i> अंग्रेजी (Literature & Grammar)
+                </button>
+            </div>
+
+            <hr class="border-slate-800 my-1">
+
+            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">मोड और टूल्स (Modes)</h2>
+            <div class="space-y-1.5">
+                <button onclick="switchTab('chat')" class="w-full text-left px-3 py-2.5 rounded-xl bg-slate-800/40 hover:bg-blue-600/20 hover:text-blue-300 text-sm font-medium transition flex items-center gap-3">
+                    <i class="fa-solid fa-comments text-blue-400 w-5"></i> AI ट्यूटर चैट (Study)
+                </button>
+                <button onclick="switchTab('quiz')" class="w-full text-left px-3 py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-sm font-semibold transition flex items-center gap-3">
+                    <i class="fa-solid fa-clipboard-question text-indigo-400 w-5"></i> लाइव परीक्षा टेस्ट (Exam)
+                </button>
+                <button onclick="switchTab('notes')" class="w-full text-left px-3 py-2.5 rounded-xl bg-slate-800/40 hover:bg-yellow-600/20 hover:text-yellow-300 text-sm font-medium transition flex items-center gap-3">
+                    <i class="fa-solid fa-note-sticky text-yellow-400 w-5"></i> मेरे स्मार्ट नोट्स (Notes)
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Workspace Area -->
+        <main class="flex-1 flex flex-col min-h-[calc(100vh-4.5rem)] p-4">
+
+            <!-- TAB 1: AI Chat & Step-by-Step Tutor -->
+            <section id="tab-chat" class="flex-1 flex flex-col h-full fade-in">
+                <div id="chatContainer" class="flex-1 overflow-y-auto space-y-4 pb-4 max-h-[68vh]">
+                    <div class="flex items-start gap-3 max-w-3xl">
+                        <div class="bg-blue-600 text-white p-2 rounded-xl shrink-0"><i class="fa-solid fa-robot"></i></div>
+                        <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2 text-sm leading-relaxed shadow-lg">
+                            <p class="font-semibold text-blue-400">नमस्ते! मैं आपका MyGyanAI ट्यूटर हूँ।</p>
+                            <p>बाएं मेनू से कोई भी विषय चुनें। मैं आपको बोर्ड परीक्षा पैटर्न के अनुसार स्टेप-बाय-स्टेप पढ़ाऊंगा!</p>
+                            <div class="flex gap-2 pt-2 flex-wrap">
+                                <button onclick="askPrompt('विज्ञान: रासायनिक अभिक्रियाएँ और समीकरण समझाओ')" class="text-xs bg-slate-800 hover:bg-emerald-600/30 border border-slate-700 px-3 py-1.5 rounded-lg transition">🧪 विज्ञान</button>
+                                <button onclick="askPrompt('गणित: त्रिकोणमिति के महत्वपूर्ण सूत्र')" class="text-xs bg-slate-800 hover:bg-blue-600/30 border border-slate-700 px-3 py-1.5 rounded-lg transition">📐 गणित</button>
+                                <button onclick="askPrompt('अंग्रेजी: A Letter to God summary')" class="text-xs bg-slate-800 hover:bg-amber-600/30 border border-slate-700 px-3 py-1.5 rounded-lg transition">📖 अंग्रेजी</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Verification Loop Box -->
+                <div id="verificationBox" class="bg-slate-900 border border-slate-800 rounded-xl p-3 mb-3 hidden flex-wrap items-center justify-between gap-2">
+                    <span class="text-xs text-slate-300 font-medium"><i class="fa-solid fa-circle-question text-blue-400 mr-2"></i> क्या आपको यह पैराग्राफ समझ आ गया?</span>
+                    <div class="flex gap-2">
+                        <button onclick="nextParagraph(true)" class="bg-emerald-600 hover:bg-emerald-500 text-xs px-3 py-1.5 rounded-lg font-medium transition text-white">हाँ, आगे बढ़ो (+10 ⭐)</button>
+                        <button onclick="nextParagraph(false)" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg text-slate-300 transition">दोबारा समझाओ</button>
+                    </div>
+                </div>
+
+                <!-- Chat Input Bar -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 flex items-center gap-3 mt-auto">
+                    <button onclick="triggerVoice()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-3 rounded-xl transition" title="Voice Input">
+                        <i class="fa-solid fa-microphone text-blue-400"></i>
+                    </button>
+                    <input type="text" id="userInput" onkeypress="if(event.key==='Enter') sendMessage()" placeholder="यहाँ अपना सवाल पूछें..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
+                    <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 rounded-xl font-medium text-sm transition shadow-lg shadow-blue-600/30 flex items-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i> भेजें
+                    </button>
+                </div>
+            </section>
+
+            <!-- TAB 2: Exam Practice & MCQ (Subject-wise 24h Lock + 10-Min Exam Timer + Scorecard) -->
+            <section id="tab-quiz" class="hidden space-y-4 fade-in max-w-3xl w-full mx-auto">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <h3 class="font-bold text-base sm:text-lg">📝 बोर्ड परीक्षा प्रैक्टिस टेस्ट (+3 ⭐ प्रति सही उत्तर)</h3>
+                        <span class="text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-3 py-1 rounded-full font-bold" id="quizSubjectLabel">SCIENCE</span>
+                    </div>
+
+                    <!-- 1. 24-Hour Lock Screen (Subject-wise) -->
+                    <div id="quizLockBox" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-xl p-6 text-center space-y-3">
+                        <div class="text-3xl">⏳</div>
+                        <h4 class="font-bold text-amber-300 text-base">इस विषय का आज का टेस्ट पूरा हो चुका है!</h4>
+                        <p class="text-xs sm:text-sm text-slate-300">अगला टेस्ट <strong>24 घंटे</strong> के बाद खुलेगा। तब तक आप दूसरे विषय का टेस्ट दे सकते हैं।</p>
+                        <div class="inline-block bg-slate-950 border border-amber-500/40 px-4 py-2 rounded-xl font-mono text-base sm:text-lg font-bold text-amber-400" id="countdownTimer">
+                            23 घंटे : 59 मिनट : 59 सेकंड
+                        </div>
+                    </div>
+
+                    <!-- 2. Start Test Intro Screen -->
+                    <div id="quizStartBox" class="bg-slate-950 border border-slate-800 rounded-xl p-6 text-center space-y-3">
+                        <div class="text-3xl">⏱️</div>
+                        <h4 class="font-bold text-slate-100 text-base">10 मिनट का लाइव बोर्ड प्रैक्टिस टेस्ट</h4>
+                        <p class="text-xs sm:text-sm text-slate-400">टेस्ट शुरू होने के बाद 10 मिनट में सभी सवाल हल करें। समय पूरा होने पर टेस्ट ऑटो-सबमिट हो जाएगा।</p>
+                        <button onclick="startSubjectExam()" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold text-white transition shadow-lg shadow-indigo-600/30">
+                            🚀 टेस्ट शुरू करें (Start 10:00 Timer)
+                        </button>
+                    </div>
+
+                    <!-- 3. Active Quiz Area with 10-Minute Exam Timer -->
+                    <div id="quizActiveArea" class="hidden space-y-4">
+                        <div class="flex items-center justify-between bg-red-500/10 border border-red-500/30 px-4 py-2.5 rounded-xl">
+                            <span class="text-xs sm:text-sm font-medium text-red-300">⏱️ शेष समय (Time Left):</span>
+                            <span id="examClock" class="font-mono text-base sm:text-lg font-bold text-red-400">10:00</span>
+                        </div>
+
+                        <div id="quizContainer" class="space-y-4"></div>
+
+                        <button id="submitTestBtn" onclick="submitFullTest(false)" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-sm font-semibold text-white transition shadow-lg">
+                            ✅ टेस्ट सबमिट करें (अगला टेस्ट 24 घंटे बाद)
+                        </button>
+                    </div>
+
+                    <!-- 4. Scorecard Result Area -->
+                    <div id="quizScorecardArea" class="hidden"></div>
+                </div>
+            </section>
+
+            <!-- TAB 3: Smart Notes -->
+            <section id="tab-notes" class="hidden space-y-4 fade-in max-w-3xl w-full mx-auto">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-base sm:text-lg text-yellow-400"><i class="fa-solid fa-note-sticky mr-2"></i> मेरे स्मार्ट नोट्स (Smart Notes)</h3>
+                        <button onclick="downloadNotes()" class="bg-blue-600 hover:bg-blue-500 text-xs px-3 py-2 rounded-lg font-medium text-white transition">
+                            <i class="fa-solid fa-download mr-1"></i> नोट्स डाउनलोड करें
+                        </button>
+                    </div>
+                    <textarea id="notesArea" rows="10" placeholder="यहाँ अपने अध्याय के महत्वपूर्ण नोट्स, सूत्र और मुख्य बिंदु लिखें..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm text-slate-200 focus:outline-none focus:border-yellow-500"></textarea>
+                    <button onclick="saveNotes()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition">
+                        💾 नोट्स सेव करें
+                    </button>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Complete JavaScript Logic -->
+    <script>
+        const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+        const EXAM_DURATION_SEC = 10 * 60;
+
+        let state = {
+            subject: 'SCIENCE',
+            stars: parseInt(localStorage.getItem('mygyanai_stars') || '120'),
+            theme: localStorage.getItem('mygyanai_theme') || 'slate'
+        };
+
+        let lockInterval = null;
+        let examInterval = null;
+        let examTimeLeft = EXAM_DURATION_SEC;
+
+        // सभी 6 विषयों का विस्तृत प्रश्न बैंक (Expanded Quiz Bank)
+        const quizBank = {
+            SCIENCE: [
+                { q: "प्रकाश के परावर्तन के कितने नियम होते हैं?", options: ["1", "2", "3", "4"], ans: 1 },
+                { q: "मनुष्य के हृदय में कितने कोष्ठ (Chambers) होते हैं?", options: ["2", "3", "4", "5"], ans: 2 },
+                { q: "विद्युत धारा का SI मात्रक क्या है?", options: ["वोल्ट", "ओम", "एम्पियर", "वाट"], ans: 2 },
+                { q: "जल का रासायनिक सूत्र क्या है?", options: ["CO2", "H2O", "O2", "NaCl"], ans: 1 },
+                { q: "पौधों में प्रकाश संश्लेषण कहाँ होता है?", options: ["जड़ में", "तने में", "क्लोरोप्लास्ट में", "फूल में"], ans: 2 }
+            ],
+            MATH: [
+                { q: "sin²θ + cos²θ का मान कितना होता है?", options: ["0", "1", "-1", "2"], ans: 1 },
+                { q: "एक समकोण त्रिभुज में सबसे बड़ी भुजा क्या कहलाती है?", options: ["लंब", "आधार", "कर्ण", "ऊंचाई"], ans: 2 },
+                { q: "π (पाई) किस प्रकार की संख्या है?", options: ["परिमेय", "अपरिमेय", "पूर्णांक", "प्राकृत"], ans: 1 },
+                { q: "वृत्त के क्षेत्रफल का सूत्र क्या है?", options: ["2πr", "πr²", "πd", "4πr²"], ans: 1 },
+                { q: "द्विघात समीकरण ax² + bx + c = 0 के मूल निकालने का सूत्र क्या है?", options: ["x = -b ± √(b² - 4ac) / 2a", "x = a ± b / c", "x = 2ab", "इनमें से कोई नहीं"], ans: 0 }
+            ],
+            SST: [
+                { q: "फ्रांसीसी क्रांति किस वर्ष हुई थी?", options: ["1789", "1857", "1947", "1914"], ans: 0 },
+                { q: "भारत का संविधान कब लागू हुआ?", options: ["15 अगस्त 1947", "26 जनवरी 1950", "26 नवंबर 1949", "2 अक्टूबर 1869"], ans: 1 },
+                { q: "रबी की फसलें किस ऋतु में बोई जाती हैं?", options: ["वर्षा", "शीत (सर्दियों)", "ग्रीष्म (गर्मी)", "इनमें से कोई नहीं"], ans: 1 },
+                { q: "लोकतंत्र का क्या अर्थ है?", options: ["राजा का शासन", "सेना का शासन", "जनता का शासन", "उद्योगपतियों का शासन"], ans: 2 },
+                { q: "जलियांवाला बाग हत्याकांड कब हुआ था?", options: ["13 अप्रैल 1919", "15 अगस्त 1947", "30 जनवरी 1948", "24 अक्टूबर 1920"], ans: 0 }
+            ],
+            HINDI: [
+                { q: "'विद्यालय' शब्द में कौन सी संधि है?", options: ["गुण संधि", "दीर्घ स्वर संधि", "यण संधि", "व्यंजन संधि"], ans: 1 },
+                { q: "'माता-पिता' में कौन सा समास है?", options: ["तत्पुरुष", "द्वंद्व समास", "बहुव्रीहि", "अव्ययीभाव"], ans: 1 },
+                { q: "'रामचरितमानस' की रचना किसने की है?", options: ["कबीरदास", "सूरदास", "तुलसीदास", "रहीम"], ans: 2 },
+                { q: "संज्ञा के स्थान पर प्रयुक्त होने वाले शब्दों को क्या कहते हैं?", options: ["विशेषण", "क्रिया", "सर्वनाम", "अव्यय"], ans: 2 },
+                { q: "'सूरसागर' किस भाषा में रचित ग्रंथ है?", options: ["अवधी", "ब्रजभाषा", "खड़ी बोली", "मैथिली"], ans: 1 }
+            ],
+            CODING: [
+                { q: "HTML का पूरा नाम क्या है?", options: ["Hyper Text Markup Language"
